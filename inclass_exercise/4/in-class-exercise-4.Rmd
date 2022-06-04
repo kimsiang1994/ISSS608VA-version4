@@ -1,0 +1,59 @@
+---
+title: "In-Class Exercise 4"
+description: |
+  A new article created using the Distill format.
+author:
+  - name: Nora Jones 
+    url: https://example.com/norajones
+    affiliation: Spacely Sprockets
+    affiliation_url: https://example.com/spacelysprokets
+date: "`r Sys.Date()`"
+output: distill::distill_article
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, eval = TRUE, message = FALSE, warning = FALSE, fig.retina = 3)
+
+```
+
+# Getting Started
+
+## Setting up R packages
+
+To start with, [ggstatsplot](https://indrajeetpatil.github.io/ggstatsplot/) and tidyverse. We use the following code block. 
+
+```{r}
+packages = c('ggstatsplot',
+             'tidyverse', 
+             'rstantools')
+for (p in packages){
+  if(!require(p, character.only = T)){
+    install.packages(p)
+  }
+}
+```
+
+## Importing data
+```{r}
+exam <- read_csv("data/Exam_data.csv")
+```
+
+## Working with ggstatsplot
+
+### ANOVA application
+```{r, fig.width = 6, fig.height = 8}
+set.seed(1234)
+
+ggbetweenstats( 
+  data=exam, 
+  x=RACE, 
+  y=ENGLISH, 
+  type="bayes"
+  )
+```
+
+
+
+
+
+

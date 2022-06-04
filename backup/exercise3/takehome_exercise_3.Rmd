@@ -1,0 +1,203 @@
+---
+title: "Take-Home Exercise 3"
+description: |
+  Analysis and display of Engagement's economy.
+author:
+  - name: Yeo Kim Siang
+    url: https://www.linkedin.com/in/kim-siang-yeo-b42317134/
+    affiliation: Singapore Management University
+    affiliation_url: https://scis.smu.edu.sg/master-it-business
+date: "`r Sys.Date()`"
+output: distill::distill_article
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, eval = FALSE, message = FALSE, warning = FALSE, fig.retina = 3)
+```
+
+# The Task
+
+This [takehome exercise](https://isss608-ay2021-22april.netlify.app/th_ex/th_ex03) aims to sharpen the skill of building data visualisation programmatically using appropriate tidyverse family of packages and the preparation of statistical graphics using ggplot2 and its extensions. The specifc requirements can be found in the screenshot below.
+
+![](images/paste-94A350AA.png)
+
+You can find the links to then datasets [here](https://vast-challenge.github.io/2022/). 
+
+# Chosen Question
+
+My analysis will focus on the Question 2 - "How does the financial health of the residents change over the period covered by the dataset? How do wages compare to the overall cost of living in Engagement? Are there groups that appear to exhibit similar patterns? Describe your rationale for your answers. Limit your response to 10 images and 500 words."
+
+# Approach
+
+In my opinion, each sub-opinion can have both an "obvious" answer, or a metric that is readily available in the data, and a "derived" answer, one that gathers multiple data points to triangulate the information needed. I will try to get bot types of answers. 
+
+## Sub-Question 1 
+"How does the financial health of the residents change over the period covered by the dataset?" 
+
+### "Obvious" Answer
+
+We evaluate the the "financialStatus" column in the datasets classified under *ParticipantStatusLogs.* 
+
+### "Derived" Answer
+To solve this question, I define what financial health meant, and build a granular visual understanding of each part of the "equation" so that the user has a fuller understanding of the financial health of residents in Engagement. 
+
+Financial health is defined as a state of 
+
+1. A steady flow of income
+To determine this, we can use the "Category" called "Wage" from the dataset *FinancialJournal.* 
+
+2. Rare changes in expenses
+To determine this, we can use the "Category" called "Education", "Food", "Recreation" and "Shelter" from the dataset *FinancialJournal.* 
+
+3. A cash balance that is growing. 
+To determine this, we can use the "availableBalance" and "weeklyExtraBudget" from *ParticipantStatusLogs.* 
+
+## Sub-Question 2 
+"How do wages compare to the overall cost of living in Engagement?" 
+
+### "Obvious"/ "Derived" Answer
+
+We can use the "Derived" Answer from Sub-Question 1. Which does hint that the right way to answer Sub-Question 1 would be to use its "Obvious" answer. 
+
+It might also give us a hint at the type of visual storytelling we should be doing with this question. Sub-Question 1 could give us a macro view on the issue, while Sub-Question 2 allows us to explore the issue in detail. 
+
+## Sub-Question 3
+
+Are there groups that appear to exhibit similar patterns?
+
+### Obvious Answer
+
+Given that we are ultimately weighing the living costs against income, it would make sense to categorise the participants based on either and their sub-components. 
+
+On the income side, this would largely mean categorising based on how much the participant brings in, and the number of hours worked. 
+
+On the cost of living side, this would mean categorising baesd on the proportion of income he or she spends on each type of expense: "Education", "Food", "Recreation" and "Shelter". 
+
+On the side of considering both income and cost of living, this would mean categorising them into savers - or people with more income than expense, and spenders - people with more expense than income. 
+
+### Derived Answer
+
+We could use academic papers as a guide to determine how people should be categorised. However, Prof Kam has noted that this is more data-directed instead of explorative. In my opinion, that means that I would be skewing the user's exploration by skewing the "type" of person they can derive. Hence, I will veer away from this direction.
+
+# Exploration
+
+Having locked down our approach, we use it as a guide to explore the data using [R for Data Science](https://r4ds.had.co.nz/exploratory-data-analysis.html) as a guide.
+
+## Initialisation
+
+### Getting Packages
+
+The packages required are tidyverse (included relevant packages for data analyses such as ggplot2, readr and dplyr), readxl, ggrepel and knitr.
+
+The code chunk below is used to install and load the required packages onto RStudio.
+
+```{r}
+packages = c('tidyverse')
+for(p in packages){
+  if(!require(p,character.only = T)){
+    install.packages(p)
+  }
+  library(p,character.only = T)
+}
+```
+
+### Getting Data 
+
+The main datasets needed are: *ParticipantStatusLogs* and *FinancialJournal.* Since both datasets are in CSV format, we use the read_csv() of the readr package is used to import the data. 
+
+This is a trivial task for "FinancialJournal" since there is only 1 CSV file. 
+
+```{r}
+financialJournal <- read_csv("data/FinancialJournal.csv")
+glimpse(financialJournal)
+```
+
+*Note: While I wanted to use ParticipantStatusLogs at first, the loading was impossible due to the size of the file and constantly threw memory errors. In addition, Prof Kam did mention that it was not priority for this question (in one of my group's meeting minutes). Hence, I decided to de-prioritise it. I did keep the steps below to document my work. *
+
+To combine the multiple sheets used to store *ParticipantStatusLogs*, we can use the following [method 1](https://www.statology.org/r-merge-csv-files/) or [method 2](https://stackoverflow.com/questions/30242065/trying-to-merge-multiple-csv-files-in-r). 
+
+```{r, eval=FALSE}
+# Do note that participantStatusLogs only uses 5 inputs for now.
+
+filenames <- list.files(path="data/psl2", full.names=TRUE)
+
+#read the files in as plaintext
+csv_list <- lapply(filenames , readLines)
+
+#remove the header from all but the first file
+csv_list[-1] <- sapply(csv_list[-1], "[", 2)
+
+#unlist to create a character vector
+csv_list <- unlist(csv_list)
+
+#write the csv as one single file
+writeLines(text=csv_list, con="all_my_csvs_combined.csv")
+
+#read the csv as one single file
+participantStatusLogs <- read.csv("all_my_csvs_combined.csv")
+
+glimpse(participantStatusLogs)
+```
+
+However, do note that it might not work as well or the code might take too long to run, especially when there are too many CSV files to combine. This was the case for me. You may consult the following [website](https://www.ablebits.com/office-addins-blog/merge-multiple-csv-files-excel/) to combine your CSV files in another way. After you do so, you can create the same dataset using the code below. 
+
+```{r, eval=FALSE}
+participantStatusLogs <- read_csv("data/combinedParticipantStatusLogs.csv")
+glimpse(participantStatusLogs)
+```
+
+After a few local runs, I realised that the file might be too huge to upload on Git. Instead, I used RDS as a workaround. 
+
+```{r, eval=FALSE}
+saveRDS(participantStatusLogs, 'data/participantStatusLogs.rds')
+participantStatusLogs2 <- readRDS('data/participantStatusLogs.rds')
+head(participantStatusLogs)
+```
+
+We also add in a few other datasets that might be related. 
+
+```{r}
+apartments <- read_csv("data/Apartments.csv")
+glimpse(apartments)
+
+buildings <- read_csv("data/Buildings.csv")
+glimpse(buildings)
+
+checkInJournal <- read_csv("data/CheckInJournal.csv")
+glimpse(checkInJournal)
+
+jobs <- read_csv("data/Jobs.csv")
+glimpse(jobs)
+
+participants <- read_csv("data/Participants.csv")
+glimpse(jobs)
+
+pubs <- read_csv("data/Pubs.csv")
+glimpse(pubs)
+
+restaurants <- read_csv("data/Restaurants.csv")
+glimpse(restaurants)
+
+schools <- read_csv("data/Schools.csv")
+glimpse(schools)
+
+travelJournal <- read_csv("data/TravelJournal.csv")
+glimpse(schools)
+```
+### Getting Data 
+
+There are pros and cons to the current dataset. The pro being that all the information is collated in one place and hence we can conduct statistical reasoning of the sample easily. The con being that it might be difficult to isolate just 1 participant at a time. 
+
+## Sub-Question 1 
+
+We evaluate the the “financialStatus” column in the datasets classified under ParticipantStatusLogs.
+
+Given that there are multiple participants over a long period of time, I will like to use the following piece of information from [method](https://www.statology.org/r-merge-csv-files/). 
+
+*"If you wish to overlay multiple histograms in the same plot, I recommend using geom_freqpoly() instead of geom_histogram(). geom_freqpoly() performs the same calculation as geom_histogram(), but instead of displaying the counts with bars, uses lines instead. It’s much easier to understand overlapping lines than bars."*
+
+```{r}
+ggplot(data = participantStatusLogs, mapping = aes(x = financialStatus, colour = participantId)) +
+  geom_freqpoly(binwidth = 0.1)
+```
+

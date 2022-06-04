@@ -1,0 +1,16 @@
+---
+title: "Kim Siang's Visual Analytics Journey"
+description: |
+  Welcome to the website. I hope you enjoy reading my material as much as I enjoyed creating it. 
+  
+site: distill::distill_website
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, eval = TRUE, message = FALSE, warning= FALSE)
+
+# Learn more about creating websites with Distill at:
+# https://rstudio.github.io/distill/website.html
+
+```
+
