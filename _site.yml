@@ -23,6 +23,8 @@ navbar:
         href: "inclass_exercise/4/in-class-exercise-4.html"
       - text: "In-class Exercise 6"
         href: "inclass_exercise/6/handson-exercise-6.html"
+      - text: "In-class Exercise 9"
+        href: "inclass_exercise/9/handson-exercise-9.html"
   right:
     - text: "Home"
       href: index.html
